@@ -1,0 +1,5 @@
+# Use ONLY if Metrics Server logs report kubelet certificate validation errors.
+# Local Docker Desktop demo only; retain certificate validation in production.
+- op: add
+  path: /spec/template/spec/containers/0/args/-
+  value: --kubelet-insecure-tls

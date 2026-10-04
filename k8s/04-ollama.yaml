@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ollama
+  namespace: ai-demo
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: {app: ollama}
+  template:
+    metadata:
+      labels: {app: ollama}
+    spec:
+      containers:
+        - name: ollama
+          image: ollama/ollama:0.6.8
+          ports:
+            - containerPort: 11434
+          env:
+            - {name: OLLAMA_HOST, value: '0.0.0.0:11434'}
+            - {name: OLLAMA_NUM_PARALLEL, value: '1'}
+          resources:
+            requests: {cpu: 500m, memory: 1Gi}
+            limits: {cpu: '2', memory: 3Gi}
+          readinessProbe:
+            httpGet: {path: /api/tags, port: 11434}
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          volumeMounts:
+            - {name: models, mountPath: /root/.ollama}
+      volumes:
+        - name: models
+          persistentVolumeClaim: {claimName: ollama-models}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ollama
+  namespace: ai-demo
+spec:
+  selector: {app: ollama}
+  ports:
+    - {port: 11434, targetPort: 11434}
